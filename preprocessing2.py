@@ -7,6 +7,35 @@ from imgaug import augmenters as iaa
 from keras.utils import Sequence
 import xml.etree.ElementTree as ET
 from utils import BoundBox, bbox_iou
+import csv
+import collections
+
+def parse_annotation(csv_path, img_dir, labels=[])
+    all_imgs = []
+    seen_labels = {}
+    headers = ["width", "height", "class", "xmin", "ymin", "xmax", "ymax"]
+    data = {"filename": []}
+    
+    for i in range(len(headers)):
+        data[headers[i]] = defaultdict(list)
+    
+    for i, row in enumerate(csv.reader(open(csv_path, 'rb'))):
+        if not i or not row:
+            continue
+        
+        for i in range(len(headers)):
+            data[headers[i]][row[0]].append(row[i])
+            
+    for filename in sorted(data["class"]):
+        img = {'object':[]}
+        img["filename"] = filename
+        img["width"] = data["width"][filename][0]
+        img["height"] = data["height"][filename][0]
+        obj = {}
+        
+        for i in range(len(data["class"][filename])):
+            obj["name"]data["class"][filename][i]
+        
 
 def parse_annotation(ann_dir, img_dir, labels=[]):
     all_imgs = []
