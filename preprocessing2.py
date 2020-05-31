@@ -13,76 +13,39 @@ import collections
 def parse_annotation(csv_path, img_dir, labels=[])
     all_imgs = []
     seen_labels = {}
-    headers = ["width", "height", "class", "xmin", "ymin", "xmax", "ymax"]
-    data = {"filename": []}
-    
-    for i in range(len(headers)):
-        data[headers[i]] = defaultdict(list)
+    data = collections.defaultdict(dict)
     
     for i, row in enumerate(csv.reader(open(csv_path, 'rb'))):
         if not i or not row:
             continue
         
-        for i in range(len(headers)):
-            data[headers[i]][row[0]].append(row[i])
-            
-    for filename in sorted(data["class"]):
-        img = {'object':[]}
-        img["filename"] = filename
-        img["width"] = data["width"][filename][0]
-        img["height"] = data["height"][filename][0]
+        filename = img_dir + row[0]
+        data[filename]["filename"] = filename
+        data[filename]["width"] = int(row[1])
+        data[filename]["height"] = int(row[2])
+        if "object" not in data[filename]:
+            data[filename]["object"] = []
+        
         obj = {}
+        obj["name"] = row[3]
         
-        for i in range(len(data["class"][filename])):
-            obj["name"]data["class"][filename][i]
+        if obj["name"] in seen_labels:
+            seen_labels[obj['name']] += 1
+        else:
+            seen_labels[obj['name']] = 1
         
-
-def parse_annotation(ann_dir, img_dir, labels=[]):
-    all_imgs = []
-    seen_labels = {}
-    
-    for ann in sorted(os.listdir(ann_dir)):
-        img = {'object':[]}
-
-        tree = ET.parse(ann_dir + ann)
+        if len(labels) > 0 and obj["name"] not in labels:
+            break
+        else:
+            obj["xmin"] = int(round(float(row[4])))
+            obj["ymin"] = int(round(float(row[5])))
+            obj["xmax"] = int(round(float(row[6])))
+            obj["ymax"] = int(round(float(row[7])))
+            data[filename]["object"] += [obj]
         
-        for elem in tree.iter():
-            if 'filename' in elem.tag:
-                img['filename'] = img_dir + elem.text
-            if 'width' in elem.tag:
-                img['width'] = int(elem.text)
-            if 'height' in elem.tag:
-                img['height'] = int(elem.text)
-            if 'object' in elem.tag or 'part' in elem.tag:
-                obj = {}
-                
-                for attr in list(elem):
-                    if 'name' in attr.tag:
-                        obj['name'] = attr.text
-
-                        if obj['name'] in seen_labels:
-                            seen_labels[obj['name']] += 1
-                        else:
-                            seen_labels[obj['name']] = 1
-                        
-                        if len(labels) > 0 and obj['name'] not in labels:
-                            break
-                        else:
-                            img['object'] += [obj]
-                            
-                    if 'bndbox' in attr.tag:
-                        for dim in list(attr):
-                            if 'xmin' in dim.tag:
-                                obj['xmin'] = int(round(float(dim.text)))
-                            if 'ymin' in dim.tag:
-                                obj['ymin'] = int(round(float(dim.text)))
-                            if 'xmax' in dim.tag:
-                                obj['xmax'] = int(round(float(dim.text)))
-                            if 'ymax' in dim.tag:
-                                obj['ymax'] = int(round(float(dim.text)))
-
-        if len(img['object']) > 0:
-            all_imgs += [img]
+    for filename in sorted(data):
+        if len(data[filename]["object"]) > 0:
+            all_imgs += [data[filename]]
                         
     return all_imgs, seen_labels
 
